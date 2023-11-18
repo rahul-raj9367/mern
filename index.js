@@ -29,6 +29,9 @@ const FormModel = mongoose.model('TattooForm', new mongoose.Schema({
   Interested: String,
   tattoo: String,
 }));
+app.get('/',(req,res)=>{
+  res.send('<h1>Hello World</h1>');
+})
 
 app.post('/submit-form', (req, res) => {
   const formData = req.body;
