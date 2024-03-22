@@ -22,65 +22,59 @@ mongoose
   });
 
 // Define the Mongoose model
-const FormModel = mongoose.model('TattooForm', new mongoose.Schema({
+const TattooFormModel = mongoose.model('TattooForm', new mongoose.Schema({
   name: String,
   email: String,
   mobileNumber: String,
   Interested: String,
   tattoo: String,
 }));
-app.get('/',(req,res)=>{
-  res.send('<h1>Hello World</h1>');
-})
 
-app.post('/submit-form', (req, res) => {
+app.get('/', (req, res) => {
+  res.send('<h1>Hello World</h1>');
+});
+
+app.post('/submit-form', async (req, res) => {
   const formData = req.body;
 
-  // Create a new document using the FormModel
-  FormModel.create(formData)
-    .then((form) => {
-      console.log('Form data saved to MongoDB:', form);
+  try {
+    // Create a new document using the TattooFormModel
+    const form = await TattooFormModel.create(formData);
+    console.log('Form data saved to MongoDB:', form);
 
-      // Send an email
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        port: 465,
-        secure: true,
-        logger: true,
-        debug: true,
-        secureConnection: false,
-        auth: {
-          user: 'rahulselvan0810@gmail.com',
-          pass: 'mgga hlxv lkdj yyxa',
-        },
-        tls: {
-          rejectUnauthorized: true,
-        },
-      });
+    // Send an email asynchronously
+    sendEmail(formData);
 
-      const mailOptions = {
-        from: 'rahulselvan0810@gmail.com',
-        to: 'rahulrahulrahul7890@gmail.com',
-        subject: 'Tattoo Form Submission',
-        text: `Name: ${formData.name}\nEmail: ${formData.email}\nMobile Number: ${formData.mobileNumber} \nInterested: ${formData.Interested}
-        \nWhen would you like to get this tattoo?: ${formData.tattoo}`,
-      };
-
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error('Error sending email:', error);
-        } else {
-          console.log('Email sent:', info.response);
-        }
-      });
-
-      res.status(200).json({ message: 'Form submitted successfully' });
-    })
-    .catch((err) => {
-      console.error('Error saving form data:', err);
-      res.status(500).json({ message: 'Error submitting form' });
-    });
+    res.status(200).json({ message: 'Form submitted successfully' });
+  } catch (error) {
+    console.error('Error submitting form:', error);
+    res.status(500).json({ message: 'Error submitting form' });
+  }
 });
+
+async function sendEmail(formData) {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'rahulselvan0810@gmail.com',
+        pass: 'mgga hlxv lkdj yyxa',
+      },
+    });
+
+    const mailOptions = {
+      from: 'rahulselvan0810@gmail.com',
+      to: 'rahulrahulrahul7890@gmail.com',
+      subject: 'Tattoo Form Submission',
+      text: `Name: ${formData.name}\nEmail: ${formData.email}\nMobile Number: ${formData.mobileNumber}\nInterested: ${formData.Interested}\nWhen would you like to get this tattoo?: ${formData.tattoo}`,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email sent:', info.response);
+  } catch (error) {
+    console.error('Error sending email:', error);
+  }
+}
 
 app.listen(3002, () => {
   console.log('Server is running at http://localhost:3002');
